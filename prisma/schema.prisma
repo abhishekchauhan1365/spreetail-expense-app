@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+  
+  groupMembers GroupMember[]
+  expensesPaid Expense[] @relation("ExpensePaidBy")
+  expenseSplits ExpenseSplit[]
+}
+
+model Group {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  
+  members  GroupMember[]
+  expenses Expense[]
+}
+
+model GroupMember {
+  id        String   @id @default(uuid())
+  groupId   String
+  userId    String
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+  
+  group Group @relation(fields: [groupId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+}
+
+model Expense {
+  id               String   @id @default(uuid())
+  groupId          String
+  description      String
+  amount           Float
+  originalAmount   Float?
+  originalCurrency String   @default("INR")
+  exchangeRate     Float?   @default(1.0)
+  date             DateTime
+  paidById         String
+  isSettlement     Boolean  @default(false)
+  status           String   @default("APPROVED") // PENDING_APPROVAL, APPROVED
+  createdAt        DateTime @default(now())
+  
+  group   Group  @relation(fields: [groupId], references: [id])
+  paidBy  User   @relation("ExpensePaidBy", fields: [paidById], references: [id])
+  splits  ExpenseSplit[]
+}
+
+model ExpenseSplit {
+  id          String   @id @default(uuid())
+  expenseId   String
+  userId      String
+  amountOwed  Float
+  splitType   String   // EQUAL, UNEQUAL, PERCENTAGE, SHARE
+  
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+model ImportLog {
+  id        String   @id @default(uuid())
+  filename  String
+  createdAt DateTime @default(now())
+  status    String   // PENDING, COMPLETED, FAILED
+  anomalies Anomaly[]
+}
+
+model Anomaly {
+  id           String   @id @default(uuid())
+  importLogId  String
+  rowNumber    Int
+  description  String
+  actionTaken  String
+  status       String   // AUTO_FIXED, REQUIRES_APPROVAL, REJECTED
+  
+  importLog ImportLog @relation(fields: [importLogId], references: [id], onDelete: Cascade)
+}
