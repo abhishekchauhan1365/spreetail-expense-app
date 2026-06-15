@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { importCSV } from '@/lib/importer';
 
 export async function POST(req: NextRequest) {

@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { NextRequest, NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
@@ -15,7 +13,7 @@ export async function GET() {
 
     const users = await prisma.user.findMany();
     
-    // Calculate balances
+    // Calculate balances dynamically
     const balances: Record<string, { name: string; paid: number; owes: number; net: number }> = {};
     users.forEach(u => {
       balances[u.id] = { name: u.name, paid: 0, owes: 0, net: 0 };
@@ -23,20 +21,15 @@ export async function GET() {
 
     expenses.forEach(exp => {
       if (exp.isSettlement) {
-        // e.g., Rohan paid Aisha back (Rohan = paidBy, Aisha = split)
         if (balances[exp.paidById]) balances[exp.paidById].paid += exp.amount;
         if (exp.splits.length > 0) {
           const payee = exp.splits[0].userId;
           if (balances[payee]) balances[payee].owes += exp.amount;
         }
       } else {
-        if (balances[exp.paidById]) {
-          balances[exp.paidById].paid += exp.amount;
-        }
+        if (balances[exp.paidById]) balances[exp.paidById].paid += exp.amount;
         exp.splits.forEach(split => {
-          if (balances[split.userId]) {
-            balances[split.userId].owes += split.amountOwed;
-          }
+          if (balances[split.userId]) balances[split.userId].owes += split.amountOwed;
         });
       }
     });
@@ -50,6 +43,7 @@ export async function GET() {
       expenses
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Dashboard API error:', error);
+    return NextResponse.json({ error: error.message, balances: [], expenses: [] }, { status: 500 });
   }
 }

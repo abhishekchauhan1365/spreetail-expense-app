@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,
@@ -13,9 +11,7 @@ export async function GET(
     const log = await prisma.importLog.findUnique({
       where: { id: logId },
       include: {
-        anomalies: {
-          orderBy: { rowNumber: 'asc' }
-        }
+        anomalies: { orderBy: { rowNumber: 'asc' } }
       }
     });
 
@@ -25,6 +21,7 @@ export async function GET(
 
     return NextResponse.json(log);
   } catch (error: any) {
+    console.error('Import log error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

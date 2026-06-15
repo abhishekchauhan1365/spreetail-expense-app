@@ -1,8 +1,6 @@
 import { parse } from 'csv-parse/sync';
-import { PrismaClient } from '@prisma/client';
-import { parse as parseDate, isValid } from 'date-fns';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { isValid } from 'date-fns';
 
 export interface AnomalyRecord {
   rowNumber: number;
