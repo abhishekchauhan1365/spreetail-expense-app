@@ -32,7 +32,13 @@ export default function ImportPage() {
     e.preventDefault();
     setIsDragging(false);
     const f = e.dataTransfer.files?.[0];
-    if (f?.name.endsWith('.csv')) setFile(f);
+    if (f?.name.endsWith('.csv')) {
+      if (f.size > 4.5 * 1024 * 1024) {
+        alert('File size exceeds the 4.5MB limit. Please upload a smaller CSV.');
+        return;
+      }
+      setFile(f);
+    }
   };
 
   const autoCount = report?.anomalies?.filter((a: any) => a.status === 'AUTO_FIXED').length ?? 0;
@@ -89,7 +95,19 @@ export default function ImportPage() {
                 ref={inputRef}
                 type="file"
                 accept=".csv"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) {
+                    if (f.size > 4.5 * 1024 * 1024) {
+                      alert('File size exceeds the 4.5MB limit. Please upload a smaller CSV.');
+                      setFile(null);
+                    } else {
+                      setFile(f);
+                    }
+                  } else {
+                    setFile(null);
+                  }
+                }}
                 className="hidden"
               />
               
