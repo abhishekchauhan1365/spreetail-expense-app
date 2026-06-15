@@ -37,7 +37,7 @@ export async function importCSV(csvData: string) {
   const parsedExpenses = [];
 
   for (let i = 0; i < records.length; i++) {
-    const row = records[i];
+    const row: any = records[i];
     const rowNum = i + 2; // +1 for 0-index, +1 for header
     
     // Anomaly 14: Zero Amount

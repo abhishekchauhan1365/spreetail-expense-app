@@ -5,9 +5,10 @@ const prisma = new PrismaClient();
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const logId = params.id;
     const log = await prisma.importLog.findUnique({
       where: { id: logId },
