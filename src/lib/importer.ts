@@ -50,7 +50,7 @@ export async function importCSV(csvData: string) {
     }
 
     // Anomaly 2: Amount formatting (commas) and Whitespace
-    let rawAmount = row.amount;
+    let rawAmount = row.amount || '';
     if (rawAmount.includes(',')) {
       anomalies.push({
         rowNumber: rowNum,
@@ -85,7 +85,7 @@ export async function importCSV(csvData: string) {
     }
 
     // Anomaly 3, 5, 13: Inconsistent case, Whitespace in Names, Name Alias
-    let paidBy = row.paid_by.trim();
+    let paidBy = (row.paid_by || '').trim();
     if (paidBy.toLowerCase() === 'priya') {
       if (paidBy !== 'Priya') {
         anomalies.push({
@@ -117,7 +117,7 @@ export async function importCSV(csvData: string) {
     }
 
     // Anomaly 13: Missing Currency
-    let currency = row.currency.trim();
+    let currency = (row.currency || '').trim();
     if (!currency) {
       anomalies.push({
         rowNumber: rowNum,
@@ -143,7 +143,7 @@ export async function importCSV(csvData: string) {
     }
 
     // Anomaly 8: Inconsistent Dates
-    let rawDate = row.date.trim();
+    let rawDate = (row.date || '').trim();
     let parsedD = new Date(rawDate);
     if (isNaN(parsedD.getTime())) {
       // Try DD/MM/YYYY
@@ -163,8 +163,9 @@ export async function importCSV(csvData: string) {
 
     // Anomaly 6: Settlement Logged as Expense
     let isSettlement = false;
-    let splitType = row.split_type.trim();
-    if (!splitType && row.notes.toLowerCase().includes('settlement')) {
+    let splitType = (row.split_type || '').trim();
+    let notes = (row.notes || '').toLowerCase();
+    if (!splitType && notes.includes('settlement')) {
       isSettlement = true;
       anomalies.push({
         rowNumber: rowNum,
@@ -188,7 +189,8 @@ export async function importCSV(csvData: string) {
     processedRows.add(dupKey);
     
     // Check conflicts like Row 24 vs Row 25
-    if (row.description.toLowerCase().includes('thalassa')) {
+    let description = (row.description || '').toLowerCase();
+    if (description.includes('thalassa')) {
        anomalies.push({
         rowNumber: rowNum,
         description: `Conflict identified for Thalassa dinner.`,
@@ -200,7 +202,7 @@ export async function importCSV(csvData: string) {
     parsedExpenses.push({
       rowNum,
       date: parsedD,
-      description: row.description,
+      description: row.description || '',
       paidBy,
       amount: finalAmountINR,
       originalAmount: parsedAmount,
@@ -208,9 +210,9 @@ export async function importCSV(csvData: string) {
       exchangeRate,
       isSettlement,
       splitType: isSettlement ? 'SETTLEMENT' : (splitType || 'EQUAL'),
-      splitWith: row.split_with.split(';').map((s: string) => s.trim()),
-      splitDetails: row.split_details,
-      notes: row.notes,
+      splitWith: (row.split_with || '').split(';').map((s: string) => s.trim()),
+      splitDetails: row.split_details || '',
+      notes: row.notes || '',
       rawRow: row
     });
   }
